@@ -17,7 +17,9 @@ public static class OverlayModel
         var liveChests = live?.ChestsOpened ?? 0;
         var liveTreasures = live?.TreasureFinds.Count ?? 0;
 
-        var total = d.Matches.Sum(m => m.ChestsOpened) + liveChests + Math.Max(0, initialChests);
+        var own = d.Matches.Sum(m => m.ChestsOpened) + liveChests + Math.Max(0, initialChests);
+        // Total includes observed teammate chests; your own total stays available as an optional overlay line.
+        var total = own + d.Matches.Sum(m => m.TeamChests - m.ChestsOpened) + ((live?.TeamChests ?? 0) - liveChests);
         var session = d.Matches.Where(ReportWriter.IsThisSession).ToList();
         var rows = new List<OverlayRow>();
 
@@ -35,7 +37,7 @@ public static class OverlayModel
         rows.Add(new OverlayRow(L.T("Sesión", "Session"), L.N(session.Sum(m => m.ChestsOpened) + liveChests), Detail: sessionDetail));
         rows.Add(new OverlayRow(L.T("Media", "Avg."), avgText));
 
-        if (showTeam) rows.Add(new OverlayRow(L.T("Equipo", "Team"), L.N(d.Matches.Sum(m => m.TeamChests) + (live?.TeamChests ?? 0))));
+        if (showTeam) rows.Add(new OverlayRow(L.T("Tú", "You"), L.N(own)));
 
         var last = d.Matches.OrderByDescending(m => m.MatchStartUtc ?? m.AnalyzedAtUtc).FirstOrDefault();
         // Entre partidas el contador derecho ya muestra la última partida: la fila solo aparece durante una partida.

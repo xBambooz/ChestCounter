@@ -260,7 +260,8 @@ public static class ReportWriter
         var progress = Progress;
         var matches = data.Matches.OrderByDescending(When).ToList();
         var countedChests = matches.Sum(m => m.ChestsOpened);
-        var totalChests = countedChests + Math.Max(0, initialChests);
+        var ownChests = countedChests + Math.Max(0, initialChests);
+        var totalChests = ownChests + matches.Sum(m => m.TeamChests - m.ChestsOpened);
         var avg = matches.Count > 0 ? (double)countedChests / matches.Count : 0;
         var best = matches.Count > 0 ? matches.Max(m => m.ChestsOpened) : 0;
         var treasures = matches.Sum(m => m.TreasureFinds.Count);
@@ -292,11 +293,11 @@ public static class ReportWriter
         // Cifras clave: el total destaca; al lado, el resto.
         var initialNote = initialChests > 0
             ? L.T($"Incluye {N(initialChests)} estimados de antes de usar la herramienta", $"Includes {N(initialChests)} estimated from before the tool")
-            : L.T("Cofres abiertos o destruidos por ti, según tus replays", "Chests you opened or destroyed, from your replays");
+            : L.T("Incluye los cofres observados de compañeros", "Includes observed teammate chests");
         sb.Append($"""
             <div class="kpis">
               <div class="kpi hero">
-                <div><div class="l">{L.T("Cofres en total", "Total chests")}</div><div class="v">{N(totalChests)}</div><div class="s">{initialNote}</div></div>
+                <div><div class="l">{L.T("Cofres en total", "Total chests")}</div><div class="v">{N(totalChests)}</div><div class="s">{L.T("Tú", "You")}: {N(ownChests)} · {initialNote}</div></div>
                 <div class="split">
                   <div><b>{N(session)}</b><span>{L.T("en esta sesión", "this session")}{(sessionMatches.Count > 0 ? " · " + L.Count(sessionMatches.Count, "partida", "partidas", "match", "matches") : "")}</span></div>
                   <div><b>{N(wins)}</b><span>{L.T(wins == 1 ? "victoria real" : "victorias reales", wins == 1 ? "Victory Royale" : "Victory Royales")}</span></div>

@@ -171,7 +171,7 @@ public sealed class SettingsForm : Form
 
         var team = AddCard(LeftX, 335, LeftW, 74, 14);
         CardTitle(team, L.T("Equipo", "Team"));
-        var teamToggle = AddToggleRow(team, L.T("Equipo en overlay", "Team in overlay"), null, 30, config.OverlayTeam);
+        var teamToggle = AddToggleRow(team, L.T("Tu total en overlay", "Your total in overlay"), null, 30, config.OverlayTeam);
         teamToggle.CheckedChanged += (_, _) => _monitor.Change(c => c.OverlayTeam = teamToggle.Checked);
 
         var archive = AddCard(RightX, 335, RightW, 180, 14);
