@@ -60,12 +60,9 @@ public sealed class Tracker
 
     public IEnumerable<FileInfo> ReplayFiles()
     {
-        var dir = new DirectoryInfo(_config.DemosFolder);
-        if (!dir.Exists)
-        {
-            return Enumerable.Empty<FileInfo>();
-        }
-        return dir.EnumerateFiles("*.replay", SearchOption.TopDirectoryOnly).OrderBy(f => f.LastWriteTimeUtc);
+        return new[] { _config.DemosFolder, _config.ArchiveFolder }
+            .Where(Directory.Exists).SelectMany(d => new DirectoryInfo(d).EnumerateFiles("*.replay"))
+            .GroupBy(f => f.Name, StringComparer.OrdinalIgnoreCase).Select(g => g.First()).OrderBy(f => f.LastWriteTimeUtc);
     }
 
     public IEnumerable<FileInfo> UnprocessedFiles() => ReplayFiles().Where(f => !_data.ProcessedFiles.ContainsKey(FileKey(f)));
@@ -234,6 +231,8 @@ public sealed class Tracker
                 "not a Battle Royale match (Creative / other mode)"));
         }
 
+        Archive(file);
+
         var existing = _data.Matches.FirstOrDefault(m => m.SessionId == record.SessionId);
         if (existing != null && existing.AnalyzerVersion >= record.AnalyzerVersion)
         {
@@ -271,6 +270,20 @@ public sealed class Tracker
 
         var newIds = _store.RegisterPrizeIds(record.TreasureFinds.Where(f => f.PrizeId != null).Select(f => f.PrizeId!));
         return new Outcome(record, Updated: existing != null, NewPrizeIds: newIds);
+    }
+
+    private void Archive(FileInfo file)
+    {
+        if (!_config.ArchiveReplays || ReplayHeaderProbe.IsLive(file.FullName) != false || ReplayHeaderProbe.KeyMissing(file.FullName)) return;
+        try
+        {
+            ReplayArchive.Copy(file, _config);
+        }
+        catch (Exception ex)
+        {
+            ErrorLog.Write("Replay archive failed: " + file.Name, ex);
+            Console.Error.WriteLine(L.T("Error al archivar: ", "Archive failed: ") + ex.Message);
+        }
     }
 
     private void PrintOutcome(Outcome o)

@@ -44,6 +44,14 @@ public sealed class TreasureFind
     public List<string> AlsoPossible { get; set; } = new();
 }
 
+public sealed class TeammateRecord
+{
+    public string? AccountId { get; set; }
+    public bool Observed { get; set; }
+    public string Name { get; set; } = "";
+    public List<ChestRecord> Chests { get; set; } = new();
+}
+
 public sealed class MatchRecord
 {
     public string SessionId { get; set; } = "";
@@ -62,6 +70,8 @@ public sealed class MatchRecord
     public int? Placement { get; set; }
     public int? TotalPlayers { get; set; }
     public int? Eliminations { get; set; }
+    public List<TeammateRecord>? Teammates { get; set; }
+    public int TeamChests => ChestsOpened + (Teammates?.Sum(t => t.Chests.Count) ?? 0);
     public int ChestsOpened { get; set; }
     public int AmmoBoxesOpened { get; set; }
     public int OtherContainersOpened { get; set; }
@@ -80,6 +90,10 @@ public sealed class Config
 
     /// <summary>Selected profile (Epic id or name of the account the player plays on); null = most recent one.</summary>
     public string? Profile { get; set; }
+    public bool OverlayTeam { get; set; }
+    public bool ArchiveReplays { get; set; }
+    public string ArchiveFolder { get; set; } = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "ChestCounter", "ReplayArchive");
+    public int ArchiveLimitGb { get; set; } = 10;
     public string DemosFolder { get; set; } = "";
 
     /// <summary>Open the tool automatically when Fortnite starts (invisible standby process started with Windows).</summary>

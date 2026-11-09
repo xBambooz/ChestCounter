@@ -89,7 +89,7 @@ public sealed class ReplayAnalyzer : FortniteReplayReader.ReplayReader
     private readonly List<GrantEvent> _grants = new();
 
     /// <summary>Bump when the analysis changes so that existing replays are re-analyzed.</summary>
-    public const int CurrentVersion = 9;
+    public const int CurrentVersion = 11;
 
     private static readonly bool ProbeDebug = Environment.GetEnvironmentVariable("CHESTCOUNTER_DEBUG") == "4";
 
@@ -517,6 +517,28 @@ public sealed class ReplayAnalyzer : FortniteReplayReader.ReplayReader
         var isRecorderTarget = recorderPs != null && targetPlayerStates.Contains(recorderPs.Value);
         var targetPawns = _pawnToPlayerState.Where(kv => targetPlayerStates.Contains(kv.Value)).Select(kv => kv.Key).ToHashSet();
 
+        var teammates = new List<TeammateRecord>();
+        if (target?.TeamIndex is > 0)
+        {
+            foreach (var player in players.Where(p => p.Id != null && p.Id != target.Id && p.TeamIndex == target.TeamIndex))
+            {
+                var states = _playerStateToPlayerId.Where(kv => kv.Value == player.Id).Select(kv => kv.Key).ToHashSet();
+                var pawns = _pawnToPlayerState.Where(kv => states.Contains(kv.Value)).Select(kv => kv.Key).ToHashSet();
+                var name = new[] { player.PlayerName, player.PlayerNameCustomOverride, player.StreamerModeName }
+                    .FirstOrDefault(n => !string.IsNullOrWhiteSpace(n)) ?? L.T($"Jugador {player.Id}", $"Player {player.Id}");
+                teammates.Add(new TeammateRecord
+                {
+                    Name = name, AccountId = player.PlayerId, Observed = pawns.Count > 0,
+                    Chests = _searches.Where(s => s.SearcherPawn is uint pawn && pawns.Contains(pawn) && ChestKinds.IsChest(ChestKinds.Classify(s.Label)))
+                        .OrderBy(s => s.Time).Select(s => new ChestRecord
+                        {
+                            TimeSeconds = MathF.Round(s.Time, 1), Kind = ChestKinds.Classify(s.Label),
+                            Blueprint = s.Label, Destroyed = s.Destroyed,
+                        }).ToList(),
+                });
+            }
+        }
+
         // --- Everything the target searched / interacted with ------------------------------------
         var interactions = _searches
             .Where(s => s.SearcherPawn is uint p && targetPawns.Contains(p))
@@ -737,6 +759,7 @@ public sealed class ReplayAnalyzer : FortniteReplayReader.ReplayReader
             OtherInteractions = others,
             AnalyzerVersion = CurrentVersion,
             IsBattleRoyale = !string.IsNullOrEmpty(replay.GameData?.CurrentPlaylist) || chests.Count > 0,
+            Teammates = target?.TeamIndex is > 0 ? teammates : null,
             Chests = chests,
             TreasureFinds = finds,
         };
