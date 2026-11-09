@@ -320,7 +320,7 @@ public sealed class Monitor
         var shown = Profiles.Current(_data, _config);
         _shownKey = shown?.Key;
         _shownName = shown?.Name;
-        var view = OverlayModel.Build(Profiles.View(_data, _config), _tracker.LiveMatch, _tracker.IsLive, Profiles.InitialChests(_data, _config));
+        var view = OverlayModel.Build(Profiles.View(_data, _config), _tracker.LiveMatch, _tracker.IsLive, Profiles.InitialChests(_data, _config), _config.OverlayTeam);
         ReportWriter.WriteOverlay(_store, view);
         ObsServer.Update(view);
         if (OperatingSystem.IsWindows() && NativeOverlay.IsRunning)
@@ -335,15 +335,13 @@ public sealed class Monitor
         Changed?.Invoke(state);
     }
 
-    /// <summary>
-    /// Estadísticas del perfil mostrado, solo sobre las últimas 100 partidas (lo que Epic Games guarda de los replays),
-    /// con la partida en curso incluida.
-    /// </summary>
+    /// <summary>Saved matches for the selected profile.</summary>
+    public List<MatchRecord> TeamMatches => Profiles.View(_data, _config).Matches;
+
     private ChestStats BuildStats()
     {
         var matches = Profiles.View(_data, _config).Matches
             .OrderByDescending(m => m.MatchStartUtc ?? m.AnalyzedAtUtc)
-            .Take(100)
             .ToList();
         var live = _tracker.IsLive ? _tracker.LiveMatch : null;
         var today = DateTime.Now.Date;

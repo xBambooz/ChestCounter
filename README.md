@@ -1,3 +1,5 @@
+> Cambios del fork: fork de Ryan de [xdoofy92/ChestCounter](https://github.com/xdoofy92/ChestCounter), con seguimiento de compañeros y archivo opcional de replays.
+
 <div align="center">
 
 **Español** · [English](README.en.md)
@@ -172,3 +174,13 @@ Instala el [SDK de .NET 10](https://dotnet.microsoft.com/download/dotnet/10.0) (
 [MIT](LICENSE). El análisis de las repeticiones se basa en [FortniteReplayDecompressor](https://github.com/Shiqan/FortniteReplayDecompressor) de Shiqan (MIT), ligeramente modificado: ver [`lib/PATCHES.md`](lib/PATCHES.md).
 
 Este proyecto no está afiliado a Epic Games, ni cuenta con su respaldo ni patrocinio. Fortnite es una marca registrada de Epic Games, Inc.
+
+## Equipo y archivo de replays
+
+El informe muestra totales de equipo, compañeros por partida y totales agrupados por nombre. Haz clic en Histúrico en la ventana principal para ver el desglose. El total de equipo incluye tus cofres y los observados de compañeros sin cambiar tu cuenta personal. El replay solo registra compañeros cercanos o espectados, por lo que puede faltar información. No se deducen tesoros de compañeros. Las partidas antiguas se vuelven a analizar una vez si aún existe el replay en Demos o en el archivo.
+
+Ajustes permite activar Equipo en overlay y Archivar replays (desactivado por defecto), elegir carpeta y límite en GB. La carpeta predeterminada es `%LOCALAPPDATA%\ChestCounter\ReplayArchive`. Se copian replays finalizados y analizados correctamente; al superar el límite se eliminan primero los archivados más antiguos. Demos nunca se modifica. El tamaño se muestra al abrir Ajustes. El análisis incluye el archivo sin duplicar nombres de archivo ni partidas. Las estadísticas usan todo el historial. No se pueden recuperar replays ya eliminados y futuras versiones del juego pueden necesitar actualizaciones del analizador.
+
+No se modifica ningún ini de Fortnite: no se verific? un ajuste compatible para el límite automático. Epic distingue los replays automáticos de los guardados, ilimitados en PC. Consulta [el soporte de Epic](https://www.epicgames.com/help/c-34254770/c-33726977/fortnite-a25553277).
+
+Escuadra agrupa compañeros observados por cuenta (o nombre), junto a tu fila resaltada. Muestra partidas, cofres y media, ordenados por `(total + mediaDeCompañeros * 5) / (partidas + 5)`. Quienes tienen menos de tres partidas observadas aparecen atenuados al final. Está en el informe y en la pestaña Escuadra tras pulsar Histúrico.

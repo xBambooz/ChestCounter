@@ -1,3 +1,5 @@
+> Fork changes: Ryan's fork of [xdoofy92/ChestCounter](https://github.com/xdoofy92/ChestCounter), with teammate tracking and optional replay archiving.
+
 <div align="center">
 
 [Español](README.md) · **English**
@@ -101,7 +103,7 @@ From top to bottom you will see: the total chests, the last match, the session, 
 - **Chests per day:** chart of the last 30 days with a scale, the daily average (dashed line) and today in cyan. Hover a bar to see the day and its chests.
 - **By chest type** and **where the treasures come from**, with a proportion bar on each row. Ammo boxes, food boxes and loot cannons are listed apart, not in the total.
 - **Treasures obtained:** each treasure with its match, the moment and the source chest.
-- **Latest matches** (the 100 most recent): mode, placement (🏆 victory in gold, top 10 in green), chests and treasures.
+- **Latest matches** (all saved matches): mode, placement (🏆 victory in gold, top 10 in green), chests and treasures.
 
 <p align="center"><img src="docs/report.png" alt="Report" width="820"></p>
 
@@ -172,3 +174,13 @@ Install the [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) (Wi
 [MIT](LICENSE). Replay parsing is based on [FortniteReplayDecompressor](https://github.com/Shiqan/FortniteReplayDecompressor) by Shiqan (MIT), slightly modified: see [`lib/PATCHES.md`](lib/PATCHES.md).
 
 This project is not affiliated with, endorsed by or sponsored by Epic Games. Fortnite is a trademark of Epic Games, Inc.
+
+## Team tracking and replay archive
+
+The report shows team totals, each match's teammates and totals grouped by teammate display name. Click History in the main window for the same breakdown. Team totals include your own chests and observed teammate chests, with no change to your personal count. Client replays only capture teammates while nearby or spectated, so counts can be incomplete. Teammate treasures are not inferred. Old matches are automatically re-analyzed once when their replay is still available in Demos or the archive.
+
+Settings offers an optional Team overlay line and Archive replays (off by default), an archive folder and a size limit in GB. The default archive is `%LOCALAPPDATA%\ChestCounter\ReplayArchive`. Successfully analyzed, finalized replays are copied there; the oldest archived replays are deleted first when the limit is exceeded. Demos is never changed. Archive size is shown when opening settings. Scans include the archive and deduplicate file names and match ids. Saved statistics use all history. Archiving cannot recover already deleted replays, and future game updates may require parser updates.
+
+No Fortnite ini tweak is applied: no supported automatic replay limit setting was verified. Epic distinguishes automatic retention from saved replays, which are unlimited on PC. See [Epic support](https://www.epicgames.com/help/c-34254770/c-33726977/fortnite-a25553277).
+
+Squad ranks observed teammates by account id (name fallback), alongside your highlighted row. It shows matches, total chests and average, ranked by `(total + teammateMean * 5) / (matches + 5)`. Players with fewer than three observed matches appear dimmed at the bottom. Open it in the report or the Squad tab after clicking History.

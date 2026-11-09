@@ -12,7 +12,7 @@ public static class OverlayModel
     /// <param name="live">Cifras de la partida en curso, cuando el replay se pudo leer (null si no).</param>
     /// <param name="inProgress">Hay una partida grabándose (aunque sus cifras aún no se puedan leer).</param>
     /// <param name="initialChests">Cofres estimados de antes de usar la herramienta (solo se suman al total).</param>
-    public static OverlayView Build(TrackerData d, MatchRecord? live, bool inProgress, int initialChests = 0)
+    public static OverlayView Build(TrackerData d, MatchRecord? live, bool inProgress, int initialChests = 0, bool showTeam = false)
     {
         var liveChests = live?.ChestsOpened ?? 0;
         var liveTreasures = live?.TreasureFinds.Count ?? 0;
@@ -34,6 +34,8 @@ public static class OverlayModel
         // Solo números en las columnas: la etiqueta ya dice qué son, y un número largo no choca con la columna de al lado.
         rows.Add(new OverlayRow(L.T("Sesión", "Session"), L.N(session.Sum(m => m.ChestsOpened) + liveChests), Detail: sessionDetail));
         rows.Add(new OverlayRow(L.T("Media", "Avg."), avgText));
+
+        if (showTeam) rows.Add(new OverlayRow(L.T("Equipo", "Team"), L.N(d.Matches.Sum(m => m.TeamChests) + (live?.TeamChests ?? 0))));
 
         var last = d.Matches.OrderByDescending(m => m.MatchStartUtc ?? m.AnalyzedAtUtc).FirstOrDefault();
         // Entre partidas el contador derecho ya muestra la última partida: la fila solo aparece durante una partida.

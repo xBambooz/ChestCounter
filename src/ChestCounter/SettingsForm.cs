@@ -42,7 +42,7 @@ public sealed class SettingsForm : Form
         MinimizeBox = false;
         ShowInTaskbar = false;
         StartPosition = FormStartPosition.CenterParent;
-        ClientSize = new Size(592, 341);
+        ClientSize = new Size(592, 530);
         Icon = AppIcon.Load();
 
         // Cabecera, como en la ventana principal.
@@ -169,12 +169,44 @@ public sealed class SettingsForm : Form
         Lbl(keys, L.T("Ctrl+Mayús+O mostrar  ·  Ctrl+Mayús+L fijar", "Ctrl+Shift+O show  ·  Ctrl+Shift+L lock"),
             8.0f, FontStyle.Bold, Theme.Ink, new Point(13, 21), new Size(RightW - 26, 18));
 
+        var team = AddCard(LeftX, 335, LeftW, 74, 14);
+        CardTitle(team, L.T("Equipo", "Team"));
+        var teamToggle = AddToggleRow(team, L.T("Equipo en overlay", "Team in overlay"), null, 30, config.OverlayTeam);
+        teamToggle.CheckedChanged += (_, _) => _monitor.Change(c => c.OverlayTeam = teamToggle.Checked);
+
+        var archive = AddCard(RightX, 335, RightW, 180, 14);
+        CardTitle(archive, L.T("Archivo de replays", "Replay archive"));
+        var archiveToggle = AddToggleRow(archive, L.T("Archivar replays", "Archive replays"), null, 27, config.ArchiveReplays);
+        archiveToggle.CheckedChanged += (_, _) => _monitor.Change(c => c.ArchiveReplays = archiveToggle.Checked);
+        var archivePath = AddField(archive, new Point(13, 65), RightW - 100, config.ArchiveFolder);
+        var chooseArchive = new PillButton { Text = L.T("Cambiar", "Change"), Location = new Point(RightW - 80, 65), Size = new Size(67, 30), Radius = 10 };
+        chooseArchive.Click += (_, _) =>
+        {
+            using var dialog = new FolderBrowserDialog { SelectedPath = config.ArchiveFolder };
+            if (dialog.ShowDialog(this) == DialogResult.OK)
+            {
+                var path = Path.GetFullPath(dialog.SelectedPath);
+                var demos = Path.GetFullPath(config.DemosFolder).TrimEnd(Path.DirectorySeparatorChar);
+                if (path.Equals(demos, StringComparison.OrdinalIgnoreCase) || path.StartsWith(demos + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)) return;
+                _monitor.Change(c => c.ArchiveFolder = path);
+                archivePath.Text = path;
+            }
+        };
+        archive.Controls.Add(chooseArchive);
+        Lbl(archive, L.T("Límite (GB)", "Limit (GB)"), 8, FontStyle.Regular, Theme.Muted, new Point(13, 108), new Size(95, 20));
+        var cap = new NumericUpDown { Minimum = 1, Maximum = 10000, Value = Math.Clamp(config.ArchiveLimitGb, 1, 10000), Location = new Point(125, 105), Width = 90 };
+        cap.ValueChanged += (_, _) => _monitor.Change(c => c.ArchiveLimitGb = (int)cap.Value);
+        archive.Controls.Add(cap);
+        long archiveBytes = 0;
+        try { archiveBytes = ReplayArchive.Size(config.ArchiveFolder); } catch (IOException) { }
+        Lbl(archive, L.T("Tamaño", "Size") + $": {archiveBytes / 1073741824.0:F2} GB", 8, FontStyle.Regular, Theme.Muted, new Point(13, 145), new Size(RightW - 26, 20));
+
         // Cerrar, en el sitio de los botones de la ventana principal.
         var close = new PillButton
         {
             Text = L.T("Cerrar", "Close"),
-            Location = new Point(RightX, 286),
-            Size = new Size(RightW, 40),
+            Location = new Point(LeftX, 475),
+            Size = new Size(LeftW, 40),
             Radius = 12,
             BackColor = Theme.Accent,
             HoverColor = Theme.AccentHover,
