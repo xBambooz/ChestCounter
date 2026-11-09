@@ -89,7 +89,7 @@ public sealed class ReplayAnalyzer : FortniteReplayReader.ReplayReader
     private readonly List<GrantEvent> _grants = new();
 
     /// <summary>Bump when the analysis changes so that existing replays are re-analyzed.</summary>
-    public const int CurrentVersion = 11;
+    public const int CurrentVersion = 12;
 
     private static readonly bool ProbeDebug = Environment.GetEnvironmentVariable("CHESTCOUNTER_DEBUG") == "4";
 
@@ -520,7 +520,11 @@ public sealed class ReplayAnalyzer : FortniteReplayReader.ReplayReader
         var teammates = new List<TeammateRecord>();
         if (target?.TeamIndex is > 0)
         {
-            foreach (var player in players.Where(p => p.Id != null && p.Id != target.Id && p.TeamIndex == target.TeamIndex))
+            var sameTeam = players.Where(p => p.Id != null && p.Id != target.Id && p.TeamIndex == target.TeamIndex).DistinctBy(p => p.Id).ToList();
+            // Large team modes put a whole side on one team index: keep only the player's own squad, or nobody if unknown.
+            if (sameTeam.Count > 3)
+                sameTeam = target.SquadId > 0 ? sameTeam.Where(p => p.SquadId == target.SquadId).ToList() : new();
+            foreach (var player in sameTeam)
             {
                 var states = _playerStateToPlayerId.Where(kv => kv.Value == player.Id).Select(kv => kv.Key).ToHashSet();
                 var pawns = _pawnToPlayerState.Where(kv => states.Contains(kv.Value)).Select(kv => kv.Key).ToHashSet();
@@ -759,7 +763,7 @@ public sealed class ReplayAnalyzer : FortniteReplayReader.ReplayReader
             OtherInteractions = others,
             AnalyzerVersion = CurrentVersion,
             IsBattleRoyale = !string.IsNullOrEmpty(replay.GameData?.CurrentPlaylist) || chests.Count > 0,
-            Teammates = target?.TeamIndex is > 0 ? teammates : null,
+            Teammates = target?.TeamIndex is > 0 ? teammates : null, // empty list = solo
             Chests = chests,
             TreasureFinds = finds,
         };

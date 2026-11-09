@@ -433,17 +433,12 @@ public static class ReportWriter
         }
 
         // Partidas: los tesoros solo aparecen cuando salió alguno.
-        sb.Append($"<section><div class=\"sh\"><h2>{L.T("Equipo", "Team")}: {N(matches.Sum(m => m.TeamChests))}</h2></div><div class=\"card tw\"><table><tbody>");
-        foreach (var teammate in matches.SelectMany(m => m.Teammates ?? new()).GroupBy(t => t.Name).OrderByDescending(g => g.Sum(t => t.Chests.Count)))
-            sb.Append($"<tr><td>{H(teammate.Key)}</td><td>{N(teammate.Sum(t => t.Chests.Count))}</td></tr>");
-        sb.Append($"</tbody></table></div><p class=\"muted\">{L.T("Los replays solo incluyen acciones de compañeros cercanos o espectados; los recuentos pueden ser incompletos.", "Replays only include nearby or spectated teammates; counts can be incomplete.")}</p></section>");
-
         sb.Append($"<section><div class=\"sh\"><h2 title=\"{H(Squad.Help)}\">{L.T("Escuadra", "Squad")} (i)</h2></div><div class=\"card tw\"><table><thead><tr><th>{L.T("Jugador", "Player")}</th><th>{L.T("Partidas", "Matches")}</th><th>{L.T("Cofres", "Chests")}</th><th>{L.T("Media", "Average")}</th><th>{L.T("Puntuación", "Score")}</th></tr></thead><tbody>");
         foreach (var row in Squad.Build(matches))
             sb.Append($"<tr style=\"{(row.Self ? "color:var(--amber);font-weight:bold;" : "")}{(row.Matches < 3 ? "opacity:.55" : "")}\"><td>{H(row.Name)}{(row.Self ? " (" + L.T("tú", "you") + ")" : "")}</td><td>{row.Matches}</td><td>{row.Total}</td><td>{row.Average.ToString("F1", L.Culture)}</td><td>{row.Score.ToString("F1", L.Culture)}</td></tr>");
-        sb.Append("</tbody></table></div></section>");
+        sb.Append($"</tbody></table></div><p class=\"muted\">{H(Squad.Caveat)}</p></section>");
 
-        var shown = matches;
+        var shown = matches.Take(100).ToList();
         var shownMax = Math.Max(1, shown.Select(m => m.ChestsOpened).DefaultIfEmpty(0).Max());
         sb.Append($"""
             <section><div class="sh"><h2>{L.T("Últimas partidas", "Latest matches")}</h2><span class="meta">{(matches.Count > shown.Count ? L.T($"las {shown.Count} más recientes de {N(matches.Count)}", $"latest {shown.Count} of {N(matches.Count)}") : L.Count(matches.Count, "partida", "partidas", "match", "matches"))}</span></div>
@@ -461,7 +456,7 @@ public static class ReportWriter
             var placeText = m.Placement == 1 ? "🏆 " + H(Pretty.Placement(m)) : H(Pretty.Placement(m));
             var barW = (100.0 * m.ChestsOpened / shownMax).ToString("0.##", CultureInfo.InvariantCulture);
             sb.Append($"<tr><td class=\"nw\">{L.DateTimeShort(When(m))}</td><td><span class=\"badge mode\">{H(Pretty.Playlist(m.Playlist))}</span></td><td><span class=\"badge{placeClass}\">{placeText}</span></td><td><div class=\"chests\"><span class=\"mini\"><i style=\"width:{barW}%\"></i></span><b>{m.ChestsOpened}</b></div></td><td>{treasure}</td></tr>");
-            if (m.Teammates != null)
+            if (m.Teammates is { Count: > 0 })
                 sb.Append($"<tr><td colspan=\"5\">{L.T("Equipo", "Team")}: {m.TeamChests} | {H(string.Join(" | ", m.Teammates.Select(t => $"{t.Name}: {t.Chests.Count}")))}</td></tr>");
         }
         sb.Append("</tbody></table></div></section>");
@@ -469,7 +464,7 @@ public static class ReportWriter
         sb.Append(L.T(
             """
             <footer><h3>Cómo se cuenta</h3>
-            <p>Cuenta los cofres que abriste o destruiste t? mismo, según tus archivos de replay (analizados tras cada partida). Las cajas de munición y de comida no se cuentan.</p>
+            <p>Cuenta los cofres que abriste o destruiste tú mismo, según tus archivos de replay (analizados tras cada partida). Las cajas de munición y de comida no se cuentan.</p>
             <p><span class="star">★★</span> cofre dorado de la caza del tesoro (cosmético, acceso a la tienda…), detectado con seguridad. <span class="star">★</span> tesoro recibido gracias a uno de tus cofres (momento exacto), con nombre cuando el objeto se puede identificar.</p>
             <p>Los nombres de los premios se pueden editar en <code>treasures.json</code>. Esta página se actualiza sola.</p></footer>
             </main></body></html>

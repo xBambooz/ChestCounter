@@ -9,7 +9,7 @@ public static class Squad
 
     public static List<SquadRow> Build(IEnumerable<MatchRecord> history)
     {
-        var matches = history.Where(m => m.Teammates != null).ToList();
+        var matches = history.Where(m => m.Teammates is { Count: > 0 }).OrderByDescending(m => m.MatchStartUtc ?? m.AnalyzedAtUtc).ToList();
         var observed = matches.SelectMany(m => m.Teammates!.Where(t => t.Observed)).ToList();
         var mean = observed.Count > 0 ? observed.Average(t => t.Chests.Count) : 0;
         var entries = matches.SelectMany(m => m.Teammates!.Where(t => t.Observed).Select(t =>
@@ -18,7 +18,7 @@ public static class Squad
         return entries.GroupBy(e => (e.Key, e.Self)).Select(g =>
         {
             var total = g.Sum(e => e.Count);
-            return new SquadRow(g.Last().Name, g.Key.Self, g.Count(), total, (double)total / g.Count(), g.Key.Self ? (double)total / g.Count() : (total + mean * 5) / (g.Count() + 5));
+            return new SquadRow(g.First().Name, g.Key.Self, g.Count(), total, (double)total / g.Count(), g.Key.Self ? (double)total / g.Count() : (total + mean * 5) / (g.Count() + 5));
         }).OrderByDescending(r => r.Matches >= 3).ThenByDescending(r => r.Score).ThenBy(r => r.Name).ToList();
     }
 }

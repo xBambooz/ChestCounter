@@ -518,7 +518,7 @@ public sealed class Tracker
 
         var before = LiveMatch;
         LiveMatch = record;
-        var changed = before?.ChestsOpened != LiveMatch?.ChestsOpened || before?.TreasureFinds.Count != LiveMatch?.TreasureFinds.Count || (before == null) != (LiveMatch == null);
+        var changed = before?.ChestsOpened != LiveMatch?.ChestsOpened || before?.TeamChests != LiveMatch?.TeamChests || before?.TreasureFinds.Count != LiveMatch?.TreasureFinds.Count || (before == null) != (LiveMatch == null);
         if (changed && LiveMatch != null)
         {
             Console.ForegroundColor = ConsoleColor.DarkGray;

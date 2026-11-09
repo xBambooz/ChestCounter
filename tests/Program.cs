@@ -5,7 +5,7 @@ void Check(bool value) { if (!value) throw new Exception("Check failed"); }
 Check(JsonSerializer.Deserialize<MatchRecord>("{\"ChestsOpened\":7}") is { Teammates: null, TeamChests: 7 });
 var history = Enumerable.Range(0, 4).Select(i => new MatchRecord
 {
-    EpicId = "self", PlayerName = "Recorder", ChestsOpened = 10,
+    EpicId = "self", PlayerName = "Recorder", ChestsOpened = 10, AnalyzedAtUtc = new DateTime(2026, 1, 1).AddDays(i),
     Teammates = new() {
         new() { AccountId = "regular", Name = i == 0 ? "Old name" : "Regular", Observed = true, Chests = new() { new(), new() } },
         new() { AccountId = "missing", Name = "Unobserved" },

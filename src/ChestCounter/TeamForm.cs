@@ -80,7 +80,7 @@ public sealed class TeamForm : Form
         foreach (var match in history.OrderByDescending(m => m.MatchStartUtc ?? m.AnalyzedAtUtc))
         {
             var mates = match.Teammates == null ? L.T("Sin datos", "No data")
-                : match.Teammates.Count == 0 ? "" : string.Join("   ", match.Teammates.Select(t => $"{t.Name} {(t.Observed ? t.Chests.Count.ToString(L.Culture) : "?")}"));
+                : match.Teammates.Count == 0 ? L.T("Solo", "Solo") : string.Join("   ", match.Teammates.Select(t => $"{t.Name} {(t.Observed ? t.Chests.Count.ToString(L.Culture) : "?")}"));
             var i = _matches.Rows.Add(L.DateTimeShort((match.MatchStartUtc ?? match.AnalyzedAtUtc).ToLocalTime()),
                 L.N(match.ChestsOpened), L.N(match.TeamChests), mates);
             _matches.Rows[i].Cells[1].Style.ForeColor = _matches.Rows[i].Cells[1].Style.SelectionForeColor = Theme.Amber;

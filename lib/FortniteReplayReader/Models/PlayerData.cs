@@ -17,6 +17,7 @@ public class PlayerData
         StreamerModeName = playerState.StreamerModeName?.Text;
         IsPartyLeader = playerState.PartyOwnerUniqueId == playerState.UniqueId || playerState.PartyOwnerUniqueId == playerState.UniqueID;
         TeamIndex = playerState.TeamIndex;
+        SquadId = playerState.SquadId;
         Level = playerState.Level;
         SeasonLevelUIDisplay = playerState.SeasonLevelUIDisplay;
         PlatformUniqueNetId = playerState.PlatformUniqueNetId;
@@ -51,6 +52,8 @@ public class PlayerData
 
     public int? PlayerNumber { get; set; }
     public int? TeamIndex { get; set; }
+    /// <summary>ChestCounter patch: squad inside a large team (0 when not replicated).</summary>
+    public int SquadId { get; set; }
     public bool IsPartyLeader { get; set; }
     public bool IsReplayOwner { get; set; }
     public bool? IsGameSessionOwner { get; set; }
