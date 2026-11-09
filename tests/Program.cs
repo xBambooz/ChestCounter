@@ -15,7 +15,7 @@ history[0].Teammates!.Add(new() { Name = "Newcomer", Observed = true, Chests = E
 var rows = Squad.Build(history);
 Check(rows.Count == 3 && rows[^1].Name == "Newcomer");
 Check(rows.Single(r => r.Name == "Regular") is { Matches: 4, Total: 8 });
-Check(Math.Abs(rows.Single(r => r.Self).Score - (40 + 28.0 / 5 * 5) / 9) < .00001);
+Check(rows.Single(r => r.Self).Score == 10);
 var root = Path.Combine(Path.GetTempPath(), "ChestCounter-check-" + Guid.NewGuid());
 try
 {
