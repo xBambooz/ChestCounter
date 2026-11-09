@@ -177,7 +177,11 @@ public sealed class SettingsForm : Form
         var archive = AddCard(RightX, 335, RightW, 180, 14);
         CardTitle(archive, L.T("Archivo de replays", "Replay archive"));
         var archiveToggle = AddToggleRow(archive, L.T("Archivar replays", "Archive replays"), null, 27, config.ArchiveReplays);
-        archiveToggle.CheckedChanged += (_, _) => _monitor.Change(c => c.ArchiveReplays = archiveToggle.Checked);
+        archiveToggle.CheckedChanged += (_, _) =>
+        {
+            _monitor.Change(c => c.ArchiveReplays = archiveToggle.Checked);
+            if (archiveToggle.Checked) _monitor.ArchiveExistingInBackground();
+        };
         var archivePath = AddField(archive, new Point(13, 65), RightW - 100, config.ArchiveFolder);
         var chooseArchive = new PillButton { Text = L.T("Cambiar", "Change"), Location = new Point(RightW - 80, 65), Size = new Size(67, 30), Radius = 10 };
         chooseArchive.Click += (_, _) =>

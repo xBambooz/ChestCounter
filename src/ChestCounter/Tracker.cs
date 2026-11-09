@@ -272,6 +272,16 @@ public sealed class Tracker
         return new Outcome(record, Updated: existing != null, NewPrizeIds: newIds);
     }
 
+    /// <summary>Copies already analyzed replays still in Demos into the archive (run when archiving is on).</summary>
+    public void ArchiveExisting()
+    {
+        if (!_config.ArchiveReplays || !Directory.Exists(_config.DemosFolder)) return;
+        foreach (var file in new DirectoryInfo(_config.DemosFolder).EnumerateFiles("*.replay").OrderBy(f => f.LastWriteTimeUtc).ToList())
+        {
+            if (_data.ProcessedFiles.ContainsKey(FileKey(file))) Archive(file);
+        }
+    }
+
     private void Archive(FileInfo file)
     {
         if (!_config.ArchiveReplays || ReplayHeaderProbe.IsLive(file.FullName) != false || ReplayHeaderProbe.KeyMissing(file.FullName)) return;

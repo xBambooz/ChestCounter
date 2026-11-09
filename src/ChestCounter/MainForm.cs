@@ -29,7 +29,7 @@ public sealed class MainForm : Form
     private readonly Card _noticeCard;
     private readonly Label _notice;
     private readonly PillButton _update;
-    private readonly PillButton _overlayButton, _reportButton, _settingsButton;
+    private readonly PillButton _overlayButton, _squadButton, _reportButton, _settingsButton;
     private readonly DailyChart _daily;
     private readonly Label _lastValue, _lastDetail;
     private MonitorState? _last;
@@ -115,11 +115,6 @@ public sealed class MainForm : Form
         _statBestMatch = Stat(L.T("Mejor partida", "Best match"), RightX + 142, 117, Theme.Ink, out _statBestMatchCap);
         _statMatches = Stat(L.T("Histórico", "History"), RightX, 196, Theme.Ink, out _statMatchesCap);
         _statTreasures = Stat(L.T("Tesoros", "Treasures"), RightX + 142, 196, Theme.Ink, out _statTreasuresCap);
-        _statMatchesCap.Cursor = Cursors.Hand;
-        _statMatchesCap.Click += (_, _) => ShowTeamHistory();
-        _statMatches.Cursor = Cursors.Hand;
-        _statMatches.Click += (_, _) => ShowTeamHistory();
-
 
         // Aviso (versión nueva, cierre con Fortnite) o botón de actualizar: ocupa el sitio de los botones.
         _noticeCard = new Card { Location = new Point(RightX, 277), Size = new Size(RightW, 40), Radius = 12, BackColor = Theme.Card, Visible = false };
@@ -135,9 +130,11 @@ public sealed class MainForm : Form
         // Botones de acción.
         _overlayButton = Action(L.T("Overlay", "Overlay"), RightX);
         _overlayButton.Click += (_, _) => _monitor.ToggleOverlay();
-        _reportButton = Action(L.T("Informe", "Report"), RightX + 95);
+        _squadButton = Action(L.T("Escuadra", "Squad"), RightX + 71);
+        _squadButton.Click += (_, _) => ShowSquad();
+        _reportButton = Action(L.T("Informe", "Report"), RightX + 142);
         _reportButton.Click += (_, _) => Open(_store.ReportPath);
-        _settingsButton = Action(L.T("Ajustes", "Settings"), RightX + 190);
+        _settingsButton = Action(L.T("Ajustes", "Settings"), RightX + 213);
         _settingsButton.Click += (_, _) =>
         {
             using var dialog = new SettingsForm(_monitor, _store);
@@ -185,46 +182,9 @@ public sealed class MainForm : Form
         }
     }
 
-    private void ShowTeamHistory()
+    private void ShowSquad()
     {
-        using var form = new Form { Text = L.T("Equipo", "Team"), Size = new Size(680, 460), StartPosition = FormStartPosition.CenterParent, BackColor = Theme.Bg, ForeColor = Theme.Ink };
-        var grid = new DataGridView { Dock = DockStyle.Fill, ReadOnly = true, AllowUserToAddRows = false, AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill, BackgroundColor = Theme.Bg, RowHeadersVisible = false };
-        grid.DefaultCellStyle.BackColor = Theme.Card;
-        grid.DefaultCellStyle.ForeColor = Theme.Ink;
-        grid.Columns.Add("match", L.T("Partida / compañero", "Match / teammate"));
-        grid.Columns.Add("team", L.T("Cofres de equipo", "Team chests"));
-        grid.Columns.Add("players", L.T("Compa?eros", "Teammates"));
-        var matches = _monitor.TeamMatches;
-        grid.Rows.Add(L.T("Total", "Total"), matches.Sum(m => m.TeamChests), "");
-        foreach (var group in matches.SelectMany(m => m.Teammates ?? new()).GroupBy(t => t.Name).OrderByDescending(g => g.Sum(t => t.Chests.Count)))
-            grid.Rows.Add(group.Key, group.Sum(t => t.Chests.Count), "");
-        foreach (var match in matches.OrderByDescending(m => m.MatchStartUtc ?? m.AnalyzedAtUtc))
-            grid.Rows.Add(L.DateTimeShort((match.MatchStartUtc ?? match.AnalyzedAtUtc).ToLocalTime()), match.TeamChests,
-                match.Teammates == null ? L.T("Sin datos", "No data") : string.Join(" | ", match.Teammates.Select(t => $"{t.Name}: {t.Chests.Count}")));
-        var tabs = new TabControl { Dock = DockStyle.Fill };
-        var teamTab = new TabPage(L.T("Equipo", "Team"));
-        teamTab.Controls.Add(grid);
-        var squadTab = new TabPage(L.T("Escuadra", "Squad"));
-        var squadGrid = new DataGridView { Dock = DockStyle.Fill, ReadOnly = true, AllowUserToAddRows = false, AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill, BackgroundColor = Theme.Bg, RowHeadersVisible = false };
-        squadGrid.DefaultCellStyle.BackColor = Theme.Card;
-        squadGrid.DefaultCellStyle.ForeColor = Theme.Ink;
-        squadGrid.Columns.Add("player", L.T("Jugador", "Player"));
-        squadGrid.Columns.Add("matches", L.T("Partidas", "Matches"));
-        squadGrid.Columns.Add("total", L.T("Cofres", "Chests"));
-        squadGrid.Columns.Add("average", L.T("Media", "Average"));
-        squadGrid.Columns.Add("score", L.T("Puntuación", "Score"));
-        squadGrid.Columns["score"].ToolTipText = Squad.Help;
-        foreach (var row in Squad.Build(matches))
-        {
-            var index = squadGrid.Rows.Add(row.Name, row.Matches, row.Total, row.Average.ToString("F1", L.Culture), row.Score.ToString("F1", L.Culture));
-            if (row.Matches < 3) squadGrid.Rows[index].DefaultCellStyle.ForeColor = Theme.Muted;
-            if (row.Self) squadGrid.Rows[index].DefaultCellStyle.ForeColor = Theme.Amber;
-        }
-        squadTab.Controls.Add(squadGrid);
-        tabs.TabPages.Add(teamTab);
-        tabs.TabPages.Add(squadTab);
-        form.Controls.Add(tabs);
-        form.Controls.Add(new Label { Text = Squad.Caveat, Dock = DockStyle.Bottom, Height = 35, ForeColor = Theme.Muted });
+        using var form = new TeamForm(_monitor.TeamMatches);
         form.ShowDialog(this);
     }
 
@@ -333,7 +293,7 @@ public sealed class MainForm : Form
         _statBestMatch.Text = st.Matches > 0 ? L.N(st.BestMatch) : "—";
         _statMatches.Text = L.Count(st.HistoryMatches, "partida", "partidas", "match", "matches");
         _statMatchesCap.Text = st.HistorySince is { } since
-            ? L.T($"Equipo: {_monitor.TeamMatches.Sum(m => m.TeamChests)} | ver", $"Team: {_monitor.TeamMatches.Sum(m => m.TeamChests)} | view")
+            ? L.T($"Desde {since:dd/MM/yy}", $"Since {since:dd/MM/yy}")
             : L.T("Histórico", "History");
         _statTreasures.Text = $"{OverlayModel.TreasureIcon} {L.N(st.Treasures)}";
         _overlayButton.Enabled = _monitor.OverlayEnabled;
@@ -400,7 +360,7 @@ public sealed class MainForm : Form
 
         // Los botones ocupan el mismo sitio que el aviso o la actualización: cuando hay aviso, se ocultan.
         var notice = _update.Visible || _noticeCard.Visible;
-        _overlayButton.Visible = _reportButton.Visible = _settingsButton.Visible = !notice;
+        _overlayButton.Visible = _squadButton.Visible = _reportButton.Visible = _settingsButton.Visible = !notice;
     }
 
     /// <summary>Tarjeta de estadística: título arriba y cifra debajo. Devuelve la etiqueta de la cifra.</summary>
@@ -414,7 +374,7 @@ public sealed class MainForm : Form
 
     private PillButton Action(string text, int x)
     {
-        var b = new PillButton { Text = text, Location = new Point(x, 277), Size = new Size(88, 40), Radius = 11 };
+        var b = new PillButton { Text = text, Location = new Point(x, 277), Size = new Size(67, 40), Radius = 11, Font = Theme.Text(8.5f, FontStyle.Bold) };
         Controls.Add(b);
         return b;
     }

@@ -100,6 +100,7 @@ public sealed class Monitor
         ObsServer.Start(_config.ObsPort > 0 ? _config.ObsPort : ObsServer.DefaultPort);
 
         new Thread(Loop) { IsBackground = true, Name = "Vigilancia" }.Start();
+        ArchiveExistingInBackground();
 
         // Nueva versión en GitHub: única conexión de red de la herramienta (se puede desactivar en ajustes).
         if (_config.UpdateMode != "off")
@@ -141,6 +142,13 @@ public sealed class Monitor
         }
         RequestPublish();
     }
+
+    /// <summary>Archives replays that were analyzed before archiving was turned on.</summary>
+    public void ArchiveExistingInBackground() => _ = Task.Run(() =>
+    {
+        try { _tracker.ArchiveExisting(); }
+        catch (Exception ex) { ErrorLog.Write("Replay archive sweep failed", ex); }
+    });
 
     public void SetProfile(string key) => Change(c => c.Profile = key);
 
